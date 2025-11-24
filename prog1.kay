@@ -1,4 +1,55 @@
 main{
-  integer i;
-  i := 7;
+  integer x;
+  integer y;
+  integer result;
+  bool flag;
+  bool check;
+
+  x := 10;
+  y := 5;
+
+  result := x + y - 3 * 2 / 1;
+  result := x % y;
+
+  flag := True;
+  check := False;
+
+  flag := True && False;
+  flag := True || False;
+  flag := !True;
+
+  if (x > y) {
+    result := x;
+  }
+
+  if (x >= y) {
+    result := x + 1;
+  } else {
+    result := y - 1;
+  }
+
+  if (x < 100) {
+    result := 0;
+  }
+
+  if (x <= y) {
+    x := x + 1;
+  }
+
+  if (x == y) {
+    result := 1;
+  }
+
+  if (x != y) {
+    result := 2;
+  }
+
+  while (x > 0) {
+    x := x - 1;
+  }
+
+  while (flag) {
+    y := y + 1;
+    flag := False;
+  }
 }
