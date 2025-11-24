@@ -8,10 +8,6 @@ Erjon Ahmetaj
 
 🧩 Project Overview
 
-This project implements the scanner (lexer) and parser for the KAY programming language, as described in the assignment specification.
-
-Your implementation includes:
-
 A fully functional lexical analyzer (TokenStream.java)
 
 A symbol-rich Token model (Token.java)
