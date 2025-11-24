@@ -5,7 +5,7 @@ import java.io.IOException;
 public class TokenStream {
 
     private BufferedReader input;
-    private int currentChar;   // last character read (as an int)
+    private int currentChar;   // last character read (as int)
 
     // ---------- constructor ----------
     public TokenStream(String filename) {
@@ -35,45 +35,43 @@ public class TokenStream {
 
     // ---------- public token API ----------
     public Token nextToken() {
-        // main loop: skip whitespace and comments
+
+        // skip whitespace
         skipWhitespace();
 
-        // also skip comments if present (might need to loop)
+        // ---------- skip comments ----------
         while (currentChar == '/') {
-            advance();  // look at what comes after '/'
+            advance();
             if (currentChar == '/') {
-                // line comment: skip until end of line or EOF
+                // line comment
                 while (currentChar != -1 && currentChar != '\n' && currentChar != '\r') {
                     advance();
                 }
                 skipWhitespace();
             } else if (currentChar == '*') {
-                // block comment: skip until */
-                advance(); // consume '*'
-                boolean endFound = false;
+                // block comment
+                advance();
+                boolean closed = false;
                 while (currentChar != -1) {
                     if (currentChar == '*') {
                         advance();
                         if (currentChar == '/') {
-                            advance(); // consume '/'
-                            endFound = true;
+                            advance();
+                            closed = true;
                             break;
                         }
                     } else {
                         advance();
                     }
                 }
-                // after block comment, skip whitespace again
                 skipWhitespace();
             } else {
-                // it was just a '/' operator
+                // just '/'
                 return new Token("Operator", "/");
             }
-
-            skipWhitespace();
         }
 
-        // EOF check after skipping whitespace/comments
+        // end of file
         if (currentChar == -1) {
             return new Token("EOF", "EOF");
         }
@@ -85,19 +83,19 @@ public class TokenStream {
             StringBuilder sb = new StringBuilder();
 
             while (currentChar != -1 &&
-                   (Character.isLetterOrDigit(currentChar) || currentChar == '_')) {
+                    (Character.isLetterOrDigit(currentChar) || currentChar == '_')) {
                 sb.append((char) currentChar);
                 advance();
             }
 
             String lexeme = sb.toString();
 
-            // boolean literals in KAY
+            // boolean literals
             if (lexeme.equals("True") || lexeme.equals("False")) {
                 return new Token("Literal", lexeme);
             }
 
-            // KAY keywords we know from the spec
+            // keywords
             if (lexeme.equals("main") ||
                 lexeme.equals("integer") ||
                 lexeme.equals("bool") ||
@@ -107,32 +105,29 @@ public class TokenStream {
                 return new Token("Keyword", lexeme);
             }
 
-            // otherwise identifier
             return new Token("Identifier", lexeme);
         }
 
-        // ---------- Integer literals (and bad 3a-style tokens) ----------
+        // ---------- Integer literals (and numeric lexical errors like 3a) ----------
         if (Character.isDigit(ch)) {
             StringBuilder sb = new StringBuilder();
 
-            // grab the digits
             while (currentChar != -1 && Character.isDigit(currentChar)) {
                 sb.append((char) currentChar);
                 advance();
             }
 
-            // if a letter or '_' immediately follows → lexical error like 3a
-            if (currentChar != -1 && (Character.isLetter(currentChar) || currentChar == '_')) {
+            // if letters follow → lexical error
+            if (currentChar != -1 &&
+                (Character.isLetter(currentChar) || currentChar == '_')) {
                 while (currentChar != -1 &&
-                       (Character.isLetterOrDigit(currentChar) || currentChar == '_')) {
+                        (Character.isLetterOrDigit(currentChar) || currentChar == '_')) {
                     sb.append((char) currentChar);
                     advance();
                 }
-                // 31 3a example → Type: Other - Value: 3a
                 return new Token("Other", sb.toString());
             }
 
-            // normal integer literal
             return new Token("Literal", sb.toString());
         }
 
@@ -147,59 +142,63 @@ public class TokenStream {
             }
         }
 
-        // ---------- Logical operators &&, ||, ! ----------
+        // ---------- Logical operators ----------
+        // &&
         if (ch == '&') {
             advance();
             if (currentChar == '&') {
                 advance();
                 return new Token("Operator", "&&");
-            } else {
-                return new Token("Other", "&");
             }
+            return new Token("Other", "&");
         }
 
+        // ||
         if (ch == '|') {
             advance();
             if (currentChar == '|') {
                 advance();
                 return new Token("Operator", "||");
-            } else {
-                return new Token("Other", "|");
             }
+            return new Token("Other", "|");
         }
 
+        // ! or !=
         if (ch == '!') {
             advance();
             if (currentChar == '=') {
                 advance();
                 return new Token("Operator", "!=");
-            } else {
-                // logical NOT
-                return new Token("Operator", "!");
             }
+            return new Token("Operator", "!");
         }
 
-        // ---------- Relational / equality operators ----------
+        // ---------- Relational + equality operators ----------
         if (ch == '<' || ch == '>' || ch == '=') {
             char first = ch;
             advance();
             if (currentChar == '=') {
                 char second = (char) currentChar;
                 advance();
-                return new Token("Operator", "" + first + second);  // <= >= ==
+                return new Token("Operator", "" + first + second);
             } else {
-                // single operators < > =
                 return new Token("Operator", Character.toString(first));
             }
         }
 
-        // ---------- Arithmetic operators (+, -, *, / that aren't comments) ----------
+        // ---------- Arithmetic operators ----------
         if (ch == '+' || ch == '-' || ch == '*') {
             advance();
             return new Token("Operator", Character.toString(ch));
         }
 
-        // note: '/' covered earlier (comment or Operator "/")
+        // modulo operator
+        if (ch == '%') {
+            advance();
+            return new Token("Operator", "%");
+        }
+
+        // note: '/' handled earlier
 
         // ---------- Separators ----------
         if ("(){};,".indexOf(ch) >= 0) {
@@ -207,7 +206,7 @@ public class TokenStream {
             return new Token("Separator", Character.toString(ch));
         }
 
-        // ---------- Fallback: unknown character ----------
+        // ---------- Unknown character ----------
         advance();
         return new Token("Other", Character.toString(ch));
     }
